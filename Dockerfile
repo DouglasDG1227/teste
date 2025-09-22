@@ -1,32 +1,32 @@
-# Etapa de build
-FROM node:18 AS builder
+# Etapa 1: Build da aplicação
+FROM node:20 AS builder
 
-# Definir diretório de trabalho
 WORKDIR /app
 
-# Copiar arquivos de dependências
+# Copiar configs do npm
 COPY package*.json ./
 
-# Instalar dependências (forçando ignorar conflitos)
+# Instalar dependências
 RUN npm install --legacy-peer-deps
 
-# Copiar resto do código
+# Copiar o resto do código
 COPY . .
 
 # Gerar build de produção
 RUN npm run build
 
-# Etapa de produção (Nginx)
+# Etapa 2: Servir com Nginx
 FROM nginx:alpine
 
-# Remover arquivos default do nginx
+# Remover arquivos padrão do nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copiar build gerado para o Nginx
+# Copiar build para o nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expor a porta
+# Copiar config customizada do nginx (opcional)
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
 
-# Rodar nginx
 CMD ["nginx", "-g", "daemon off;"]
